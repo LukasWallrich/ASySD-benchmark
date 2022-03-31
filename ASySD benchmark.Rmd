@@ -1,0 +1,87 @@
+---
+title: "Benchmarking ASySD"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load_gh("camaradesuk/ASySD")
+pacman::p_load_gh("mjwestgate/synthesisr")
+```
+
+## Load data
+
+```{r}
+df <- read_refs(c("0_Ovid_search_results_1_to_1000.ris","0_Ovid_search_results_1001_to_2000.ris",
+                  "0_Ovid_search_results_2001_to_3000.ris", "0_Ovid_search_results_3001_to_3130.ris"),
+                  tag_naming = "ovid")
+```
+
+## Prep for ASySD and deduplicate
+
+
+```{r}
+df_prepped <- df %>% transmute(author, 
+                 title, 
+                 abstract, 
+                 doi,
+                 year,
+                 journal,
+                 volume,
+                 number = issue,
+                 pages = paste0(start_page, "-", end_page),
+                 isbn = NA, 
+                 label = NA,
+                 source = NA) %>% tibble::rowid_to_column("record_id")
+
+
+res <- dedup_citations(df_prepped)
+```
+
+## Compare to benchmark
+
+```{r}
+benchmark_groups <- read_csv("benchmark-groups.csv") %>% filter(!is.na(Dup_Group))
+
+#Drop duplicated entries
+deduplicated <- res$unique[!duplicated(res$unique$record_id),]
+
+results <- benchmark_groups %>% 
+  group_by(Dup_Group) %>%
+  #Factor introduced to ensure that false positive and negative are always included - even when 0
+  summarise(selected = factor(sum(ORN %in% deduplicated$record_id), levels = 0:20)) %>% 
+  count(selected, .drop = FALSE) %>%
+  mutate(selected = as.numeric(as.character(selected)),
+         outcome = case_when(selected == 0 ~ "false positive",
+                             selected == 1 ~ "correct",
+                             selected > 1 ~ "false negative"),
+         dummy = (selected - 1) * n) %>%
+  mutate(
+         N = case_when(outcome == "false negative" ~ as.integer(dummy),
+                       outcome != "false negative" ~ as.integer(n))) %>%
+  group_by(outcome) %>%
+  summarise(N_rows = sum(N), N_records = sum(n))
+
+results
+
+results <- results$N_rows %>% set_names(results$outcome)
+
+tibble::tribble(
+  ~measure,  ~score,
+  "accuracy", 1 - (results["false positive"] + results["false negative"])/nrow(df),
+  "sensitivity", 1 - results["false negative"]/1238,
+  "specificity", 1 - results["false positive"]/1892)
+
+
+false_negatives <- benchmark_groups %>% 
+  group_by(Dup_Group) %>%
+  summarise(selected = sum(ORN %in% deduplicated$record_id), record_id = as.character(ORN[ORN %in% deduplicated$record_id])) %>% 
+  filter(selected > 1) %>% 
+  select(-selected) %>%
+  inner_join(deduplicated)
+
+false_negatives
+
+
+```
+

@@ -1,0 +1,6 @@
+# Benchmarking ASySD [https://github.com/camaradesuk/ASySD]
+
+This uses the methods and dataset from the following article to assess the deduplication performance of ASySD:
+
+> McKeown, S., & Mir, Z. M. (2021). Considerations for conducting systematic reviews: evaluating the performance of different methods for de-duplicating references. Systematic reviews, 10(1), 1-8.
+
