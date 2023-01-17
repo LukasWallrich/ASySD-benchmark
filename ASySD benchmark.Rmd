@@ -1,7 +1,18 @@
 ---
 title: "Benchmarking ASySD"
-output: html_document
+output: webexercises::webexercises_default
 ---
+
+# Introduction
+
+There are many competing deduplication tools - including R packages, functionalities of reference managers or modules in commercial software designed to support systematic reviews. McKeown and Mir [(2021)](https://doi.org/10.1186/s13643-021-01583-y) recently benchmarked six such tools, yet did not include R packages which could deliver greater transparency and integrate more seamlessly with our workflow. Therefore, we used their results and dataset to benchmark the [ASySD](https://github.com/camaradesuk/ASySD) R package.
+
+# Benchmark
+```{r, include=FALSE}
+pacman::p_load(webexercises)
+```
+
+`r webexercises::hide("Click here to see the details of the benchmarking.")`
 
 ```{r setup, message=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -73,12 +84,6 @@ results
 
 results <- results$N_rows %>% set_names(results$outcome)
 
-tibble::tribble(
-  ~measure,  ~score,
-  "accuracy", 1 - (results["false positive"] + results["false negative"])/nrow(df),
-  "sensitivity", 1 - results["false negative"]/1238,
-  "specificity", 1 - results["false positive"]/1892)
-
 # Supposed false positive is an error in the benchmarking dataset
 benchmark_groups %>% 
   group_by(Dup_Group) %>%
@@ -102,6 +107,28 @@ false_negatives <- benchmark_groups %>%
 
 false_negatives
 
+results <- tibble::tribble(
+  ~Measure,  ~Score,
+  "accuracy", 1 - (results["false positive"] + results["false negative"])/nrow(df),
+  "sensitivity", 1 - results["false negative"]/(nrow(benchmark_groups)-length(unique(benchmark_groups$Dup_Group))),
+  "specificity", 1 - results["false positive"]/length(unique(benchmark_groups$Dup_Group))) %>% 
+  gt::gt() %>% gt::fmt_percent(2, decimals = 1) %>% 
+  gt::tab_header("ASySD performance on McKeown & Kir (2021) dataset")
 
 ```
+
+`r webexercises::unhide()`
+
+# Results
+
+The benchmarking results are shown in the table below - though note that the only false positive is actually an error in the benchmarking dataset, to that the true specificity is 100%. 
+
+```{r echo = FALSE}
+results
+```
+
+With regard to sensitivity, ASySD's 91% outperforms most of the tools considered by McKeown and Kir (2021, see their [Table 3](https://link.springer.com/article/10.1186/s13643-021-01583-y/tables/3)). Only Rayyan offered significantly greater sensitivity, but at the cost of much lower specificity (97%, which implies that 3% of unique articles would be mistakenly 'lost' as duplicates). 
+
+Also, the results here only consider ASySD's fully automated deduplication. Many of the false negatives are included in the list of possible further duplicates for manual review that is also provided. Therefore, we decided to rely on ASySD for deduplication in the meta-analysis of the diversity-team performance link.
+
 

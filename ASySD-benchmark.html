@@ -252,6 +252,64 @@ if (window.hljs) {
 
 
 
+<style type="text/css">:root {
+--pink: #983E82; 
+--orange: #E2A458; 
+--yellow: #F5DC70; 
+--green: #59935B; 
+--blue: #467AAC; 
+--purple: #61589C; 
+}
+
+.webex-incorrect,
+.webex-radiogroup label.webex-incorrect{
+border: 2px dotted var(--pink);
+background-color: #edaddd;
+border-radius: 0.25em;
+}
+.webex-correct,
+.webex-radiogroup label.webex-correct {
+border: 2px solid var(--green);
+background-color: #c0edc2;
+border-radius: 0.25em;
+}
+
+.webex-solution {
+height: 2.5em;
+overflow-y: hidden;
+padding: 0.5em;
+margin-bottom: 10px;
+}
+.webex-solution.open {
+height: auto;
+border: 2px solid var(--blue);
+border-radius: 5px;
+}
+.webex-solution button {
+height: 2em;
+margin-bottom: 0.5em;
+border-radius: 0.5em;
+background-color: var(--blue);
+color: white;
+padding: 0 0.5em;
+}
+.webex-solution pre.sourceCode {
+border-color: var(--green);
+}
+.webex-radiogroup label {
+margin-left: 2em;
+text-indent: -1em;
+padding-left: 0.5em;
+font-weight: 400;
+display: block;
+border: 2px solid rgba(255, 255, 255, 1);
+border-radius: 0.25em;
+}
+.webex-radiogroup label input {
+position: relative;
+left: -1em;
+}
+</style>
 
 
 
@@ -353,6 +411,22 @@ display: none;
 </div>
 
 
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>There are many competing deduplication tools - including R packages,
+functionalities of reference managers or modules in commercial software
+designed to support systematic reviews. McKeown and Mir <a href="https://doi.org/10.1186/s13643-021-01583-y">(2021)</a> recently
+benchmarked six such tools, yet did not include R packages which could
+deliver greater transparency and integrate more seamlessly with our
+workflow. Therefore, we used their results and dataset to benchmark the
+<a href="https://github.com/camaradesuk/ASySD">ASySD</a> R package.</p>
+</div>
+<div id="benchmark" class="section level1">
+<h1>Benchmark</h1>
+<div class="webex-solution">
+<button>
+Click here to see the details of the benchmarking.
+</button>
 <pre class="r"><code>knitr::opts_chunk$set(echo = TRUE)
 remotes::install_github(&quot;camaradesuk/ASySD&quot;, ref = remotes::github_pull(&quot;7&quot;))
 library(ASySD)
@@ -362,7 +436,7 @@ library(dplyr)
 library(readr)
 library(magrittr)</code></pre>
 <p>This is run with ASySD version
-<code>r</code>packageVersion(“ASySD”)`, the latest GitHub version on
+<code>r</code>packageVersion(&quot;ASySD&quot;)`, the latest GitHub version on
 2023-01-17.</p>
 <div id="load-data" class="section level2">
 <h2>Load data</h2>
@@ -440,18 +514,7 @@ results</code></pre>
 ## 3 false positive      1         1</code></pre>
 <pre class="r"><code>results &lt;- results$N_rows %&gt;% set_names(results$outcome)
 
-tibble::tribble(
-  ~measure,  ~score,
-  &quot;accuracy&quot;, 1 - (results[&quot;false positive&quot;] + results[&quot;false negative&quot;])/nrow(df),
-  &quot;sensitivity&quot;, 1 - results[&quot;false negative&quot;]/1238,
-  &quot;specificity&quot;, 1 - results[&quot;false positive&quot;]/1892)</code></pre>
-<pre><code>## # A tibble: 3 × 2
-##   measure     score
-##   &lt;chr&gt;       &lt;dbl&gt;
-## 1 accuracy    0.965
-## 2 sensitivity 0.914
-## 3 specificity 0.999</code></pre>
-<pre class="r"><code># Supposed false positive is an error in the benchmarking dataset
+# Supposed false positive is an error in the benchmarking dataset
 benchmark_groups %&gt;% 
   group_by(Dup_Group) %&gt;%
   #Factor introduced to ensure that false positive and negative are always included - even when 0
@@ -504,8 +567,594 @@ benchmark_groups %&gt;%
 ## # … with 199 more rows, 5 more variables: number &lt;chr&gt;, pages &lt;chr&gt;,
 ## #   isbn &lt;lgl&gt;, label &lt;lgl&gt;, source &lt;lgl&gt;, and abbreviated variable names
 ## #   ¹​duplicate_id, ²​abstract</code></pre>
+<pre class="r"><code>results &lt;- tibble::tribble(
+  ~Measure,  ~Score,
+  &quot;accuracy&quot;, 1 - (results[&quot;false positive&quot;] + results[&quot;false negative&quot;])/nrow(df),
+  &quot;sensitivity&quot;, 1 - results[&quot;false negative&quot;]/(nrow(benchmark_groups)-length(unique(benchmark_groups$Dup_Group))),
+  &quot;specificity&quot;, 1 - results[&quot;false positive&quot;]/length(unique(benchmark_groups$Dup_Group))) %&gt;% 
+  gt::gt() %&gt;% gt::fmt_percent(2, decimals = 1) %&gt;% 
+  gt::tab_header(&quot;ASySD performance on McKeown &amp; Kir (2021) dataset&quot;)</code></pre>
+</div>
+</div>
+</div>
+<div id="results" class="section level1">
+<h1>Results</h1>
+<p>The benchmarking results are shown in the table below - though note
+that the only false positive is actually an error in the benchmarking
+dataset, to that the true specificity is 100%.</p>
+<div id="gqrivqiolz" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>html {
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
+#gqrivqiolz .gt_table {
+display: table;
+border-collapse: collapse;
+margin-left: auto;
+margin-right: auto;
+color: #333333;
+font-size: 16px;
+font-weight: normal;
+font-style: normal;
+background-color: #FFFFFF;
+width: auto;
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #A8A8A8;
+border-right-style: none;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #A8A8A8;
+border-left-style: none;
+border-left-width: 2px;
+border-left-color: #D3D3D3;
+}
+#gqrivqiolz .gt_heading {
+background-color: #FFFFFF;
+text-align: center;
+border-bottom-color: #FFFFFF;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+}
+#gqrivqiolz .gt_caption {
+padding-top: 4px;
+padding-bottom: 4px;
+}
+#gqrivqiolz .gt_title {
+color: #333333;
+font-size: 125%;
+font-weight: initial;
+padding-top: 4px;
+padding-bottom: 4px;
+padding-left: 5px;
+padding-right: 5px;
+border-bottom-color: #FFFFFF;
+border-bottom-width: 0;
+}
+#gqrivqiolz .gt_subtitle {
+color: #333333;
+font-size: 85%;
+font-weight: initial;
+padding-top: 0;
+padding-bottom: 6px;
+padding-left: 5px;
+padding-right: 5px;
+border-top-color: #FFFFFF;
+border-top-width: 0;
+}
+#gqrivqiolz .gt_bottom_border {
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+}
+#gqrivqiolz .gt_col_headings {
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+}
+#gqrivqiolz .gt_col_heading {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: normal;
+text-transform: inherit;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+vertical-align: bottom;
+padding-top: 5px;
+padding-bottom: 6px;
+padding-left: 5px;
+padding-right: 5px;
+overflow-x: hidden;
+}
+#gqrivqiolz .gt_column_spanner_outer {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: normal;
+text-transform: inherit;
+padding-top: 0;
+padding-bottom: 0;
+padding-left: 4px;
+padding-right: 4px;
+}
+#gqrivqiolz .gt_column_spanner_outer:first-child {
+padding-left: 0;
+}
+#gqrivqiolz .gt_column_spanner_outer:last-child {
+padding-right: 0;
+}
+#gqrivqiolz .gt_column_spanner {
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+vertical-align: bottom;
+padding-top: 5px;
+padding-bottom: 5px;
+overflow-x: hidden;
+display: inline-block;
+width: 100%;
+}
+#gqrivqiolz .gt_group_heading {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+text-transform: inherit;
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+vertical-align: middle;
+text-align: left;
+}
+#gqrivqiolz .gt_empty_group_heading {
+padding: 0.5px;
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+vertical-align: middle;
+}
+#gqrivqiolz .gt_from_md > :first-child {
+margin-top: 0;
+}
+#gqrivqiolz .gt_from_md > :last-child {
+margin-bottom: 0;
+}
+#gqrivqiolz .gt_row {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+margin: 10px;
+border-top-style: solid;
+border-top-width: 1px;
+border-top-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+vertical-align: middle;
+overflow-x: hidden;
+}
+#gqrivqiolz .gt_stub {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+text-transform: inherit;
+border-right-style: solid;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+padding-left: 5px;
+padding-right: 5px;
+}
+#gqrivqiolz .gt_stub_row_group {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+text-transform: inherit;
+border-right-style: solid;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+padding-left: 5px;
+padding-right: 5px;
+vertical-align: top;
+}
+#gqrivqiolz .gt_row_group_first td {
+border-top-width: 2px;
+}
+#gqrivqiolz .gt_summary_row {
+color: #333333;
+background-color: #FFFFFF;
+text-transform: inherit;
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+}
+#gqrivqiolz .gt_first_summary_row {
+border-top-style: solid;
+border-top-color: #D3D3D3;
+}
+#gqrivqiolz .gt_first_summary_row.thick {
+border-top-width: 2px;
+}
+#gqrivqiolz .gt_last_summary_row {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+}
+#gqrivqiolz .gt_grand_summary_row {
+color: #333333;
+background-color: #FFFFFF;
+text-transform: inherit;
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+}
+#gqrivqiolz .gt_first_grand_summary_row {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+border-top-style: double;
+border-top-width: 6px;
+border-top-color: #D3D3D3;
+}
+#gqrivqiolz .gt_striped {
+background-color: rgba(128, 128, 128, 0.05);
+}
+#gqrivqiolz .gt_table_body {
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+}
+#gqrivqiolz .gt_footnotes {
+color: #333333;
+background-color: #FFFFFF;
+border-bottom-style: none;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 2px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+}
+#gqrivqiolz .gt_footnote {
+margin: 0px;
+font-size: 90%;
+padding-left: 4px;
+padding-right: 4px;
+padding-left: 5px;
+padding-right: 5px;
+}
+#gqrivqiolz .gt_sourcenotes {
+color: #333333;
+background-color: #FFFFFF;
+border-bottom-style: none;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 2px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+}
+#gqrivqiolz .gt_sourcenote {
+font-size: 90%;
+padding-top: 4px;
+padding-bottom: 4px;
+padding-left: 5px;
+padding-right: 5px;
+}
+#gqrivqiolz .gt_left {
+text-align: left;
+}
+#gqrivqiolz .gt_center {
+text-align: center;
+}
+#gqrivqiolz .gt_right {
+text-align: right;
+font-variant-numeric: tabular-nums;
+}
+#gqrivqiolz .gt_font_normal {
+font-weight: normal;
+}
+#gqrivqiolz .gt_font_bold {
+font-weight: bold;
+}
+#gqrivqiolz .gt_font_italic {
+font-style: italic;
+}
+#gqrivqiolz .gt_super {
+font-size: 65%;
+}
+#gqrivqiolz .gt_footnote_marks {
+font-style: italic;
+font-weight: normal;
+font-size: 75%;
+vertical-align: 0.4em;
+}
+#gqrivqiolz .gt_asterisk {
+font-size: 100%;
+vertical-align: 0;
+}
+#gqrivqiolz .gt_indent_1 {
+text-indent: 5px;
+}
+#gqrivqiolz .gt_indent_2 {
+text-indent: 10px;
+}
+#gqrivqiolz .gt_indent_3 {
+text-indent: 15px;
+}
+#gqrivqiolz .gt_indent_4 {
+text-indent: 20px;
+}
+#gqrivqiolz .gt_indent_5 {
+text-indent: 25px;
+}
+</style>
+<table class="gt_table">
+  <thead class="gt_header">
+    <tr>
+      <td colspan="2" class="gt_heading gt_title gt_font_normal gt_bottom_border" style>ASySD performance on McKeown &amp; Kir (2021) dataset</td>
+    </tr>
+    
+  </thead>
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Measure">Measure</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Score">Score</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="Measure" class="gt_row gt_left">accuracy</td>
+<td headers="Score" class="gt_row gt_right">96.5%</td></tr>
+    <tr><td headers="Measure" class="gt_row gt_left">sensitivity</td>
+<td headers="Score" class="gt_row gt_right">91.4%</td></tr>
+    <tr><td headers="Measure" class="gt_row gt_left">specificity</td>
+<td headers="Score" class="gt_row gt_right">99.9%</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+<p>With regard to sensitivity, ASySD&#39;s 91% outperforms most of the tools
+considered by McKeown and Kir (2021, see their <a href="https://link.springer.com/article/10.1186/s13643-021-01583-y/tables/3">Table
+3</a>). Only Rayyan offered significantly greater sensitivity, but at
+the cost of much lower specificity (97%, which implies that 3% of unique
+articles would be mistakenly &#39;lost&#39; as duplicates).</p>
+<p>Also, the results here only consider ASySD&#39;s fully automated
+deduplication. Many of the false negatives are included in the list of
+possible further duplicates for manual review that is also provided.
+Therefore, we decided to rely on ASySD for deduplication in the
+meta-analysis of the diversity-team performance link.</p>
 </div>
 
+<script>
+
+/* update total correct if #webex-total_correct exists */
+update_total_correct = function() {
+  console.log("webex: update total_correct");
+
+  if (t = document.getElementById("webex-total_correct")) {
+    var correct = document.getElementsByClassName("webex-correct").length;
+    var solvemes = document.getElementsByClassName("webex-solveme").length;
+    var radiogroups = document.getElementsByClassName("webex-radiogroup").length;
+    var selects = document.getElementsByClassName("webex-select").length;
+    
+    t.innerHTML = correct + " of " + (solvemes + radiogroups + selects) + " correct";
+  }
+}
+
+/* webex-solution button toggling function */
+b_func = function() {
+  console.log("webex: toggle hide");
+  
+  var cl = this.parentElement.classList;
+  if (cl.contains('open')) {
+    cl.remove("open");
+  } else {
+    cl.add("open");
+  }
+}
+
+/* function for checking solveme answers */
+solveme_func = function(e) {
+  console.log("webex: check solveme");
+
+  var real_answers = JSON.parse(this.dataset.answer);
+  var my_answer = this.value;
+  var cl = this.classList;
+  if (cl.contains("ignorecase")) {
+    my_answer = my_answer.toLowerCase();
+  }
+  if (cl.contains("nospaces")) {
+    my_answer = my_answer.replace(/ /g, "")
+  }
+
+  if (my_answer == "") {
+    cl.remove("webex-correct");
+    cl.remove("webex-incorrect");
+  } else if (real_answers.includes(my_answer)) {
+    cl.add("webex-correct");
+    cl.remove("webex-incorrect");
+  } else {
+    cl.add("webex-incorrect");
+    cl.remove("webex-correct");
+  }
+
+  // match numeric answers within a specified tolerance
+  if(this.dataset.tol > 0){
+    var tol = JSON.parse(this.dataset.tol);
+    var matches = real_answers.map(x => Math.abs(x - my_answer) < tol)
+    if (matches.reduce((a, b) => a + b, 0) > 0) {
+      cl.add("webex-correct");
+    } else {
+      cl.remove("webex-correct");
+    }
+  }
+
+  // added regex bit
+  if (cl.contains("regex")){
+    answer_regex = RegExp(real_answers.join("|"))
+    if (answer_regex.test(my_answer)) {
+      cl.add("webex-correct");
+    }
+  }
+
+  update_total_correct();
+}
+
+/* function for checking select answers */
+select_func = function(e) {
+  console.log("webex: check select");
+  
+  var cl = this.classList
+  
+  /* add style */
+  cl.remove("webex-incorrect");
+  cl.remove("webex-correct");
+  if (this.value == "answer") {
+    cl.add("webex-correct");
+  } else if (this.value != "blank") {
+    cl.add("webex-incorrect");
+  }
+  
+  update_total_correct();
+}
+
+/* function for checking radiogroups answers */
+radiogroups_func = function(e) {
+  console.log("webex: check radiogroups");
+
+  var checked_button = document.querySelector('input[name=' + this.id + ']:checked');
+  var cl = checked_button.parentElement.classList;
+  var labels = checked_button.parentElement.parentElement.children;
+  
+  /* get rid of styles */
+  for (i = 0; i < labels.length; i++) {
+    labels[i].classList.remove("webex-incorrect");
+    labels[i].classList.remove("webex-correct");
+  }
+  
+  /* add style */
+  if (checked_button.value == "answer") {
+    cl.add("webex-correct");
+  } else {
+    cl.add("webex-incorrect");
+  }
+  
+  update_total_correct();
+}
+
+window.onload = function() {
+  console.log("onload");
+  /* set up solution buttons */
+  var buttons = document.getElementsByTagName("button");
+
+  for (var i = 0; i < buttons.length; i++) {
+    if (buttons[i].parentElement.classList.contains('webex-solution')) {
+      buttons[i].onclick = b_func;
+    }
+  }
+
+  /* set up webex-solveme inputs */
+  var solveme = document.getElementsByClassName("webex-solveme");
+
+  for (var i = 0; i < solveme.length; i++) {
+    /* make sure input boxes don't auto-anything */
+    solveme[i].setAttribute("autocomplete","off");
+    solveme[i].setAttribute("autocorrect", "off");
+    solveme[i].setAttribute("autocapitalize", "off");
+    solveme[i].setAttribute("spellcheck", "false");
+    solveme[i].value = "";
+
+    /* adjust answer for ignorecase or nospaces */
+    var cl = solveme[i].classList;
+    var real_answer = solveme[i].dataset.answer;
+    if (cl.contains("ignorecase")) {
+      real_answer = real_answer.toLowerCase();
+    }
+    if (cl.contains("nospaces")) {
+      real_answer = real_answer.replace(/ /g, "");
+    }
+    solveme[i].dataset.answer = real_answer;
+
+    /* attach checking function */
+    solveme[i].onkeyup = solveme_func;
+    solveme[i].onchange = solveme_func;
+  }
+  
+  /* set up radiogroups */
+  var radiogroups = document.getElementsByClassName("webex-radiogroup");
+  for (var i = 0; i < radiogroups.length; i++) {
+    radiogroups[i].onchange = radiogroups_func;
+  }
+  
+  /* set up selects */
+  var selects = document.getElementsByClassName("webex-select");
+  for (var i = 0; i < selects.length; i++) {
+    selects[i].onchange = select_func;
+  }
+
+  update_total_correct();
+}
+
+</script>
 
 
 
