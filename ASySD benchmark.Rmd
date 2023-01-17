@@ -3,15 +3,22 @@ title: "Benchmarking ASySD"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, message=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-pacman::p_load_gh("camaradesuk/ASySD")
+remotes::install_github("camaradesuk/ASySD", ref = remotes::github_pull("7"))
+library(ASySD)
+#pacman::p_load_current_gh("camaradesuk/ASySD")
 pacman::p_load_gh("mjwestgate/synthesisr")
+library(dplyr)
+library(readr)
+library(magrittr)
 ```
+
+This is run with ASySD version `r `packageVersion("ASySD")`, the latest GitHub version on `r Sys.Date()`.
 
 ## Load data
 
-```{r}
+```{r load-refs}
 df <- read_refs(c("0_Ovid_search_results_1_to_1000.ris","0_Ovid_search_results_1001_to_2000.ris",
                   "0_Ovid_search_results_2001_to_3000.ris", "0_Ovid_search_results_3001_to_3130.ris"),
                   tag_naming = "ovid")
@@ -20,7 +27,7 @@ df <- read_refs(c("0_Ovid_search_results_1_to_1000.ris","0_Ovid_search_results_1
 ## Prep for ASySD and deduplicate
 
 
-```{r}
+```{r dedup-refs}
 df_prepped <- df %>% transmute(author, 
                  title, 
                  abstract, 
@@ -40,7 +47,7 @@ res <- dedup_citations(df_prepped)
 
 ## Compare to benchmark
 
-```{r}
+```{r benchmark}
 benchmark_groups <- read_csv("benchmark-groups.csv") %>% filter(!is.na(Dup_Group))
 
 #Drop duplicated entries
@@ -72,6 +79,19 @@ tibble::tribble(
   "sensitivity", 1 - results["false negative"]/1238,
   "specificity", 1 - results["false positive"]/1892)
 
+# Supposed false positive is an error in the benchmarking dataset
+benchmark_groups %>% 
+  group_by(Dup_Group) %>%
+  #Factor introduced to ensure that false positive and negative are always included - even when 0
+  summarise(selected = factor(sum(ORN %in% deduplicated$record_id), levels = 0:20)) %>% 
+  filter(selected == 0) %>% 
+  inner_join(benchmark_groups) %>% 
+  select(Dup_Group, AU, TI, YR, JN)
+
+# This is because one version of this article is wrongly in a different benchmarking group
+benchmark_groups %>% 
+  filter(Dup_Group %in% c("3", "4")) %>% 
+  select(Dup_Group, AU, TI, YR, JN)
 
 false_negatives <- benchmark_groups %>% 
   group_by(Dup_Group) %>%
